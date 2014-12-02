@@ -9,20 +9,14 @@ import java.util.Vector;
 public class Data {
 	
 	public String filename;
-	public static Vector<Vector<Double>> column;
+	public Vector<Vector<Double>> column;
 	
-	public Data(Path filePath, int columns){
-		
-		this.filename = filePath.toString();
-		column = new Vector<Vector<Double>>(columns);
-		for(int i=0; i<3; i++) column.add(i, new Vector<Double>(0));
-		
-		try { importData(filename); } 
-		catch (FileNotFoundException e) {}
-		
-		printData();
-	}
-	
+	/**
+	 * Main constructor, takes a filename and the number of columns in the 
+	 * dataset
+	 * @param filename
+	 * @param columns
+	 */
 	public Data(String filename, int columns){
 		
 		this.filename = filename;
@@ -35,6 +29,24 @@ public class Data {
 		printData();
 	}
 
+	/**
+	 * Secondary constructor, takes a file path and the number of columns in the 
+	 * dataset
+	 * @param filePath
+	 * @param columns
+	 */
+	public Data(Path filePath, int columns){
+		
+		this.filename = filePath.toString();
+		column = new Vector<Vector<Double>>(columns);
+		for(int i=0; i<3; i++) column.add(i, new Vector<Double>(0));
+		
+		try { importData(filename); } 
+		catch (FileNotFoundException e) {}
+		
+		printData();
+	}
+	
 	/**
 	 * Finds the data, ignores the column headings, imports each column of values
 	 * into a new vector
@@ -65,7 +77,7 @@ public class Data {
 		
 		for(int i=0; i<column.get(0).size(); i++){
 			
-			for(int j=0; j<3; j++)	System.out.print(column.get(j).get(i) + "\t");
+			for(int j=0; j<3; j++)	System.out.print(column.get(j).get(i) + "\t\t");
 			
 			System.out.println();
 		}

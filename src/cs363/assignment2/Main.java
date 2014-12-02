@@ -13,7 +13,9 @@ public class Main {
 			
 		Data data1 = new Data("data/hw2dataset_10.txt", 3);	
 		
+		double[] probabilities = {0.5, 0.5, 0.5};
 		
+		Statistics GenderHeight = new Statistics(data1, 1,2, probabilities);
 		
 // 	FUN THING TO TRY LATER
 //		Data[] data = new Data[5];
