@@ -54,9 +54,15 @@ public class Statistics {
 		
 		pChild = new BinaryProbability(totalProbability(pChildgTrueParent, pChildgFalseParent, pParent));
 		pParentgTrueChild = new BinaryProbability(bayes(pChildgTrueParent.pTrue, pParent.pTrue, pChild.pTrue));
-		pParentgFalseChild = new BinaryProbability(bayes(pChildgTrueParent.pFalse, pParent.pTrue, pChild.pFalse)); 
-	
+		pParentgFalseChild = new BinaryProbability(bayes(pChildgTrueParent.pFalse, pParent.pTrue, pChild.pFalse)); 	
+		
 		// At this point all expectations are calculated.
+		
+		double temp = maximizeParent(parentData, missingParents, trueParents);
+		updateExpectations(parentData, missingParents, temp);
+		
+		temp = maximizeChild(childData)
+		
 	}
 	
 	public Vector<Integer> find(double target, Vector<Double> input){
@@ -82,20 +88,44 @@ public class Statistics {
 		pParent = count()
 	}
 	
-	public double count(Vector<Double> parent, Vector<Integer> locations, double p){
-		
-		double total = 0;
-		
-		int j=0;
-		for(int i=0; i<parent.size(); i++){
+	public double maximizeParent(	Vector<Double> parent, 
+									Vector<Integer> missings, 
+									Vector<Integer> trues)
+	{
+													// COUNT THE OBSERVED TRUE
+		double total = 0;							// VALUES, THEN FOR EACH	
+		for(int i=0; i<missings.size(); i++) 		// MISSING VALUE ADD THE 
+			total += parent.get(missings.get(i));	// PROBABILITY THAT IT'S TRUE
 			
-			total += 
-		}
+		for(int i=0; i<trues.size(); i++) 			
+			total += parent.get(missings.get(i)) * pParent.pTrue;			
+																										
+		return total/parent.size();
 	}
 	
-	public double count(Vector<Double> parent, Vector<Double> child, Vector<Integer> locations, double p){
+	/**
+	 * Pass vectors of data, where the missing and true children are, then decide
+	 * if you're trying to calculate p(child = true) given either true or false 
+	 * parents by setting tfParents equal either to trueParents or falseParents.
+	 * @param parent
+	 * @param child
+	 * @param missingsChildren
+	 * @param children
+	 * @param missingParents
+	 * @param parents
+	 * @return
+	 */
+	public double maximizeChild(	Vector<Double> parent, 
+									Vector<Double> child, 
+									Vector<Integer> missingsChildren, 
+									Vector<Integer> trueChildren,
+									Vector<Integer> missingParents,
+									Vector<Integer> tfParents)
+	{
 		
-		
+		double total = 0;
+		for(int i=0; i<trueChildren.size(); i++)
+			if(tfParents )
 	}
 	
 	public double totalProbability(	BinaryProbability pChildgTrueParent, 
