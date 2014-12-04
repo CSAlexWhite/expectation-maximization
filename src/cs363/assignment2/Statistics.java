@@ -61,12 +61,8 @@ public class Statistics {
 		
 		// At this point all expectations are calculated.
 		
-		pParent.set(maximizeParent(parentData, missingParents, trueParents));
-			
-		updateExpectations(parentData, missingParents, pParent.pTrue);
-		
-//		temp = maximizeChild(childData)
-		
+		pParent.set(maximizeParent(parentData, missingParents, trueParents));		
+		updateExpectations(parentData, missingParents, pParent.pTrue);		
 	}
 	
 	public void recalculate(){
@@ -84,24 +80,15 @@ public class Statistics {
 		
 		Vector<Integer> output = new Vector<Integer>();
 		
-		for(int i=0; i< input.size(); i++)
-			if(input.get(i) == target) output.add(i);
+		for(int i=0; i< input.size(); i++) if(input.get(i) == target) output.add(i);
 		
 		return output;
 	}
 	
 	public void updateExpectations(Vector<Double> column, Vector<Integer> targets, double value){
 		
-		for(int i=0; i<targets.size(); i++){
-			
-			column.set(targets.get(i), value);
-		}
+		for(int i=0; i<targets.size(); i++) column.set(targets.get(i), value);		
 	}
-//	
-//	public void maximize(){
-//		
-//		pParent = count()
-//	}
 	
 	public double maximizeParent(	Vector<Double> parent, 
 									Vector<Integer> missings, 
@@ -140,45 +127,66 @@ public class Statistics {
 									Vector<Integer> tfParents,
 									boolean parentTrue)
 	{
-		double tempAnswer = 0,
-			   totalA = 0, 
-			   totalB = 0, 
-			   totalC = 0, 
-			   totalD = 0;
-		
+		double tempAnswer = 0, totalA = 0, totalB = 0, totalC = 0, totalD = 0;
+
 		if(parentTrue) 	tempAnswer = pChildgTrueParent.pTrue;
 		if(!parentTrue) tempAnswer = pChildgFalseParent.pTrue;
-	
-		// COUNT WHERE PARENT = parentTrue AND CHILD = 1
-		for(int i=0; i<tfParents.size(); i++) 
-			if(childData.get(tfParents.get(i)) == 1) totalA += 1.0;
-		
+					
 		if(parentTrue){
 			
-			// COUNT WHERE PARENT = parentTrue AND CHILD = ?
+			// COUNT WHERE PARENT = 1 AND CHILD = 1
+			for(int i=0; i<tfParents.size(); i++) 
+				if(childData.get(tfParents.get(i)) == 1) totalA += 1.0;
+			
+			// COUNT (WHERE PARENT = 1 AND CHILD = ?) * P(CHILD = 1 | PARENT = 1)
 			for(int i=0; i<missingChildren.size(); i++)
 				if(parentData.get(missingChildren.get(i)) == 1.0)
 					totalB += pChildgTrueParent.pTrue;
-			
-			//if(childData.get(missingChildren.get(i)) > 0.0 && childData.get(tfParents.get(i)) < 1.0) 
-			
-			// COUNT WHERE PARENT = ? AND CHILD = 1;
+						
+			// COUNT (WHERE PARENT = ? AND CHILD = 1) * P(PARENT = 1 | CHILD = 1);
 			for(int i=0; i<missingParents.size(); i++)
 				if(childData.get(missingParents.get(i)) == 1.0)
 					totalC += bayes(tempAnswer, 
 									pParent.pTrue, 
-									totalProbability(pChildgTrueParent,pChildgFalseParent,pParent));
-			
-			// COUNT WHERE PARENT = 1 + WHERE PARENT = ?
+									totalProbability(pChildgTrueParent,
+													 pChildgFalseParent,
+													 pParent));			
+			// COUNT WHERE PARENT = 1 + 
+			// COUNT WHERE PARENT = ? * P(PARENT = 1)
 			for(int i=0; i<tfParents.size(); i++)
 				if(parentData.get(tfParents.get(i)) == 1) totalD += 1.0;
 			for(int i=0; i<missingParents.size(); i++)
-				totalD += pParent.pTrue;
-				
+				totalD += pParent.pTrue;			
 		}
 		
-		return (totalA + totalB + totalC) / totalD;
+		if(!parentTrue){
+			
+			// COUNT WHERE PARENT = 0 AND CHILD = 1
+			for(int i=0; i<tfParents.size(); i++) 
+				if(childData.get(tfParents.get(i)) == 1) totalA += 1.0;
+			
+			// COUNT (WHERE PARENT = 0 AND CHILD = ?) * P(CHILD = 1 | PARENT = 0)
+			for(int i=0; i<missingChildren.size(); i++)
+				if(parentData.get(missingChildren.get(i)) == 1.0)
+					totalB += pChildgFalseParent.pTrue;
+			
+			// COUNT (WHERE PARENT = ? AND CHILD = 1) * P(PARENT = 0 | CHILD = 1);
+			for(int i=0; i<missingParents.size(); i++)
+				if(childData.get(missingParents.get(i)) == 1.0)
+					totalC += bayes(tempAnswer, 
+									pParent.pTrue, 
+									totalProbability(pChildgTrueParent,
+													 pChildgFalseParent,
+													 pParent));		
+			// COUNT WHERE PARENT = 1 + 
+			// COUNT WHERE PARENT = ? * P(PARENT = 0)
+			for(int i=0; i<tfParents.size(); i++)
+				if(parentData.get(tfParents.get(i)) == 0) totalD += 1.0;
+			for(int i=0; i<missingParents.size(); i++)
+				totalD += pParent.pFalse;				
+		}
 		
+		return (totalA + totalB + totalC) / totalD;	
 	}
 	
 	public double totalProbability(	BinaryProbability pChildgTrueParent, 
@@ -191,21 +199,5 @@ public class Statistics {
 	public double bayes(double pChildgParent, double pParent, double pChild){
 		
 		return (pChildgParent * pParent) / pChild;
-	}
-	
-	/**
-	 * Calculate the expected value for true in the given column.
-	 * @param prior
-	 * @param input
-	 * @return an expectation
-	 */
-	public double expectation(double prior, Vector<Double> input){
-		
-
-	}	
-	
-	public void maximization(double expectation, Vector<Double> input){
-		
-	
 	}
 }
