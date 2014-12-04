@@ -28,7 +28,12 @@ public class Statistics {
 					trueParents, 
 					falseParents;
 	/**
-	 * Each Statistics object represents the information over one arc of the graph.
+	 * Each statistic represents probabilities over one directed arc of a 
+	 * Bayesian network
+	 * @param input : the input data
+	 * @param column1 : index of the column for the parent
+	 * @param column2 : index of the column for the child
+	 * @param probabilities : an array of expectations
 	 */
 	public Statistics(Data input, int column1, int column2, double[] probabilities){
 		
@@ -41,28 +46,38 @@ public class Statistics {
 		pChildgTrueParent = new BinaryProbability(probabilities[1]);
 		pChildgFalseParent = new BinaryProbability(probabilities[2]);
 				
-		/********************** CALCULATIONS **********************/
+		/***************** COUNTING AND TRACKING VARIABLES ************/
 		
 		totalRows = parentData.size();
 		
-		missingChildren = find(-1.0, childData);
-		missingParents = find(-1.0, parentData);
-		trueChildren = find(1.0, childData);
+		missingChildren = find(-1.0, childData);	// INDICES OF TYPES OF DATA
+		missingParents = find(-1.0, parentData);	// TO ENABLE MORE EFFICIENT
+		trueChildren = find(1.0, childData);		// COUNTING AND UPDATING
 		falseChildren = find(0.0, childData);
 		trueParents = find(1.0, parentData);
 		falseParents = find(0.0, parentData);	
 		
-		pChild = new BinaryProbability(totalProbability(pChildgTrueParent, pChildgFalseParent, pParent));
-		pParentgTrueChild = new BinaryProbability(bayes(pChildgTrueParent.pTrue, pParent.pTrue, pChild.pTrue));
-		pParentgFalseChild = new BinaryProbability(bayes(pChildgTrueParent.pFalse, pParent.pTrue, pChild.pFalse)); 	
+		/********************** CALCULATIONS **********************/		
 		
 		// At this point all expectations are calculated.
 		
-		double temp = maximizeParent(parentData, missingParents, trueParents);
-		updateExpectations(parentData, missingParents, temp);
+		pParent.set(maximizeParent(parentData, missingParents, trueParents));
+			
+		updateExpectations(parentData, missingParents, pParent.pTrue);
 		
-		temp = maximizeChild(childData)
+//		temp = maximizeChild(childData)
 		
+	}
+	
+	public void recalculate(){
+		
+		pChild = new BinaryProbability(
+				totalProbability(pChildgTrueParent, pChildgFalseParent, pParent));
+		
+		pParentgTrueChild = new BinaryProbability(
+				bayes(pChildgTrueParent.pTrue, pParent.pTrue, pChild.pTrue));
+		pParentgFalseChild = new BinaryProbability(
+				bayes(pChildgTrueParent.pFalse, pParent.pTrue, pChild.pFalse)); 
 	}
 	
 	public Vector<Integer> find(double target, Vector<Double> input){
@@ -82,11 +97,11 @@ public class Statistics {
 			column.set(targets.get(i), value);
 		}
 	}
-	
-	public void maximize(){
-		
-		pParent = count()
-	}
+//	
+//	public void maximize(){
+//		
+//		pParent = count()
+//	}
 	
 	public double maximizeParent(	Vector<Double> parent, 
 									Vector<Integer> missings, 
@@ -107,25 +122,63 @@ public class Statistics {
 	 * Pass vectors of data, where the missing and true children are, then decide
 	 * if you're trying to calculate p(child = true) given either true or false 
 	 * parents by setting tfParents equal either to trueParents or falseParents.
-	 * @param parent
-	 * @param child
-	 * @param missingsChildren
-	 * @param children
-	 * @param missingParents
-	 * @param parents
-	 * @return
+	 * @param parentData : parent column
+	 * @param childData	: child column
+	 * @param missingsChildren : indices of missing Children
+	 * @param trueChildren : indices of true Children
+	 * @param missingParents : indices of missing Parents
+	 * @param tfParents : indices either of true or false parents, depending on
+	 * 					  the calculation
+	 * @param parentTrue : what choice you made for tfParents
+	 * @return probability of a true child given either a true or false parent
 	 */
-	public double maximizeChild(	Vector<Double> parent, 
-									Vector<Double> child, 
+	public double maximizeChild(	Vector<Double> parentData, 
+									Vector<Double> childData, 
 									Vector<Integer> missingsChildren, 
 									Vector<Integer> trueChildren,
 									Vector<Integer> missingParents,
-									Vector<Integer> tfParents)
+									Vector<Integer> tfParents,
+									boolean parentTrue)
 	{
+		double tempAnswer = 0,
+			   totalA = 0, 
+			   totalB = 0, 
+			   totalC = 0, 
+			   totalD = 0;
 		
-		double total = 0;
-		for(int i=0; i<trueChildren.size(); i++)
-			if(tfParents )
+		if(parentTrue) 	tempAnswer = pChildgTrueParent.pTrue;
+		if(!parentTrue) tempAnswer = pChildgFalseParent.pTrue;
+	
+		// COUNT WHERE PARENT = parentTrue AND CHILD = 1
+		for(int i=0; i<tfParents.size(); i++) 
+			if(childData.get(tfParents.get(i)) == 1) totalA += 1.0;
+		
+		if(parentTrue){
+			
+			// COUNT WHERE PARENT = parentTrue AND CHILD = ?
+			for(int i=0; i<missingChildren.size(); i++)
+				if(parentData.get(missingChildren.get(i)) == 1.0)
+					totalB += pChildgTrueParent.pTrue;
+			
+			//if(childData.get(missingChildren.get(i)) > 0.0 && childData.get(tfParents.get(i)) < 1.0) 
+			
+			// COUNT WHERE PARENT = ? AND CHILD = 1;
+			for(int i=0; i<missingParents.size(); i++)
+				if(childData.get(missingParents.get(i)) == 1.0)
+					totalC += bayes(tempAnswer, 
+									pParent.pTrue, 
+									totalProbability(pChildgTrueParent,pChildgFalseParent,pParent));
+			
+			// COUNT WHERE PARENT = 1 + WHERE PARENT = ?
+			for(int i=0; i<tfParents.size(); i++)
+				if(parentData.get(tfParents.get(i)) == 1) totalD += 1.0;
+			for(int i=0; i<missingParents.size(); i++)
+				totalD += pParent.pTrue;
+				
+		}
+		
+		return (totalA + totalB + totalC) / totalD;
+		
 	}
 	
 	public double totalProbability(	BinaryProbability pChildgTrueParent, 
