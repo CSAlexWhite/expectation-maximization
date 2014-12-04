@@ -12,10 +12,10 @@ public class Main {
 	public static void main(String[] args){
 			
 		Data data1 = new Data("data/hw2dataset_10.txt", 3);	
+		data1.printData();
+		double[] probabilities = {0.4, 0.3, 0.9};
 		
-		double[] probabilities = {0.5, 0.5, 0.5};
-		
-		Statistics GenderHeight = new Statistics(data1, 1,2, probabilities);
+		BinaryBayesArc GenderHeight = new BinaryBayesArc(data1, 0,1, probabilities);
 		
 // 	FUN THING TO TRY LATER
 //		Data[] data = new Data[5];

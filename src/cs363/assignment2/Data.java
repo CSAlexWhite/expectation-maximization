@@ -26,7 +26,7 @@ public class Data {
 		try { importData(filename); } 
 		catch (FileNotFoundException e) {}
 		
-		printData();
+		//printData();
 	}
 
 	/**
@@ -76,6 +76,8 @@ public class Data {
 	public void printData(){
 		
 		for(int i=0; i<column.get(0).size(); i++){
+			
+			System.out.print(i + "\t");
 			
 			for(int j=0; j<3; j++)	System.out.print(column.get(j).get(i) + "\t\t");
 			
