@@ -13,9 +13,11 @@ public class BinaryBayesArc {
 	
 	// ALWAYS PASS THE TRUE VALUE TO THE BINARY PROBABILITY CONSTRUCTOR
 	
+	String parentName, childName;
+	
 	Vector<Double> parentData, childData;
 	
-	int totalRows;
+	int totalRows;  
 	
 	BinaryProbability 	pParent, pChild, 
 						pChildgTrueParent, pChildgFalseParent, 
@@ -36,29 +38,38 @@ public class BinaryBayesArc {
 	 * @param column2 : index of the column for the child
 	 * @param probabilities : an array of expectations
 	 */
-	public BinaryBayesArc(Data input, int column1, int column2, double[] probabilities){
+	public BinaryBayesArc(	String parentName, String childName, 
+							Data input, int column1, int column2, 
+							BinaryProbability prParent, 
+							BinaryProbability pChildTrueParent,
+							BinaryProbability pChildFalseParent)
+	{
 		
 		/***************** SETTING MEMBER VARIABLES ***************/
+		
+		this.parentName = parentName;
+		this.childName = childName;
 		
 		parentData = input.column.get(column1);
 		childData = input.column.get(column2);
 		
-		missingChildren = new Vector<Integer>();
-		missingParents = new Vector<Integer>(); 
-		trueChildren = new Vector<Integer>(); 
-		falseChildren = new Vector<Integer>();
-		trueParents = new Vector<Integer>(); 
-		falseParents = new Vector<Integer>();
+		missingChildren = 	new Vector<Integer>();
+		missingParents 	= 	new Vector<Integer>(); 
+		trueChildren 	= 	new Vector<Integer>(); 
+		falseChildren 	= 	new Vector<Integer>();
+		trueParents 	= 	new Vector<Integer>(); 
+		falseParents 	= 	new Vector<Integer>();
 		
-		pParent = new BinaryProbability(probabilities[0]);
-		pChildgTrueParent = new BinaryProbability(probabilities[1]);
-		pChildgFalseParent = new BinaryProbability(probabilities[2]);
+		pParent 			= prParent;
+		pChildgTrueParent 	= pChildTrueParent;
+		pChildgFalseParent 	= pChildFalseParent;
 		
 		pChild = new BinaryProbability(
 				totalProbability(pChildgTrueParent, pChildgFalseParent, pParent));
 		
 		pParentgTrueChild = new BinaryProbability(
 				bayes(pChildgTrueParent.pTrue, pParent.pTrue, pChild.pTrue));
+		
 		pParentgFalseChild = new BinaryProbability(
 				bayes(pChildgTrueParent.pFalse, pParent.pTrue, pChild.pFalse)); 
 				
@@ -67,7 +78,7 @@ public class BinaryBayesArc {
 		totalRows = parentData.size();	
 		getIndices();
 		
-		System.out.println(totalRows);
+		//System.out.println(totalRows);
 		
 		/********************** CALCULATIONS **********************/		
 		
@@ -76,35 +87,33 @@ public class BinaryBayesArc {
 		double threshold = 0.001, difference = 0.0, temp = 0.0;
 		
 		recalculate();
-		
-		System.out.println("INITIAL");
-		printValues();
-		//input.printData();
+		input.printData();
 			
 		temp = pParent.pTrue;
 		//System.out.println(temp);
 		
-		maximizeParent();
-		recalculate();
-		maximizeChild();
-		recalculate();
-		update();
-		
-		System.out.println("\nONE PASS");
-		printValues();
-		
-		maximizeParent();
-		recalculate();
-		maximizeChild();
-		recalculate();
-		update();
-		
-		System.out.println("\nTWO PASSES");
-		printValues();
-		//input.printData();
+		//for(int i=0; i<10; i++){
 			
-			difference = Math.abs(temp - pParent.pTrue);
+			maximizeParent();
+			recalculate();
+			maximizeChild();
+			recalculate();
+			update();
+			printValues();
+		//}			
+			
+		difference = Math.abs(temp - pParent.pTrue);
 				
+	}
+	
+	public void loop(){
+		
+		maximizeParent();
+		recalculate();
+		maximizeChild();
+		recalculate();
+		update();
+		printValues();
 	}
 	
 	private void recalculate(){
@@ -129,9 +138,9 @@ public class BinaryBayesArc {
 	
 	private void update(){
 		
-		System.out.println(totalRows);
-		System.out.println(pParent.pTrue);
-		System.out.println(missingParents.size());
+//		System.out.println(totalRows);
+//		System.out.println(pParent.pTrue);
+//		System.out.println(missingParents.size());
 		for(int i=0; i<missingParents.size(); i++){
 			
 			parentData.set(missingParents.get(i), pParent.pTrue);
@@ -234,17 +243,17 @@ public class BinaryBayesArc {
 	
 	public void printValues(){
 		
-		System.out.println("VARIABLE\tP(TRUE)\tP(FALSE)");
-		System.out.println("P(GENDER):\t" + pParent.pTrue + "\t" + pParent.pFalse);
-
-		System.out.println("P(WEIGHT): " + pChild.pTrue + "\t" + pChild.pFalse);
-
-		System.out.println("P(WEIGHT = LOW | FEMALE): " + pChildgTrueParent.pTrue + "\t" + pChildgTrueParent.pFalse);
-
-		System.out.println("P(WEIGHT = LOW | MALE): " + pChildgFalseParent.pTrue + "\t" + pChildgFalseParent.pFalse);
-
-		System.out.println("P(FEMALE | WEIGHT = LOW): " + pParentgTrueChild.pTrue + "\t" + pParentgTrueChild.pFalse);
-
-		System.out.println("P(FEMALE | WEIGHT = HIGH): " + pParentgFalseChild.pTrue + "\t" + pParentgFalseChild.pFalse);
+//		System.out.println("VARIABLE\tP(TRUE)\tP(FALSE)");
+		System.out.println("P(" + parentName + "):\t" + pParent.pTrue);
+//
+//		System.out.println("P(" + childName + "): " + pChild.pTrue);
+//
+//		System.out.println("P(WEIGHT = LOW | FEMALE): " + pChildgTrueParent.pTrue);
+//
+//		System.out.println("P(WEIGHT = LOW | MALE): " + pChildgFalseParent.pTrue);
+//
+//		System.out.println("P(FEMALE | WEIGHT = LOW): " + pParentgTrueChild.pTrue);
+//
+//		System.out.println("P(FEMALE | WEIGHT = HIGH): " + pParentgFalseChild.pTrue);
 	}
 }
